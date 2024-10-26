@@ -1,0 +1,149 @@
+﻿@page "/"
+@using System.Data
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+<section class=" container d-flex justify-content-center flex-column align-items-center" >
+	<div>
+		<h6>A simple Web Calculator App</h6>
+	</div>
+	<div class="calculator text-white shadow" @onkeydown="HandleKeyPress" tabindex="0">
+		<div>
+			<InputText @bind-Value="value" class="w-100 p-3 border-1 text-white bg-black" readonly/>
+		</div>
+		<div class="text-white mt-2">
+			<button @onclick="Square">x²</button>
+			<button @onclick="SquareRoot">√</button>
+			<button @onclick="() => AppendOperators('%')">%</button>
+			<button class="operators" @onclick="() => AppendOperators('/')">/</button>
+		</div>
+		<div class="text-white mt-2">
+			<button @onclick="() => AppendToDisplay(7)">7</button>
+			<button @onclick="() => AppendToDisplay(8)">8</button>
+			<button @onclick="() => AppendToDisplay(9)">9</button>
+			<button class="operators" @onclick="() => AppendOperators('*')">X</button>
+		</div>
+		<div class="text-white mt-2">
+			<button @onclick="() => AppendToDisplay(4)">4</button>
+			<button @onclick="() => AppendToDisplay(5)">5</button>
+			<button @onclick="() => AppendToDisplay(6)">6</button>
+			<button class="operators" @onclick="() => AppendOperators('-')">-</button>
+		</div>
+		<div class="text-white mt-2">
+			<button @onclick="() => AppendToDisplay(1)">1</button>
+			<button @onclick="() => AppendToDisplay(2)">2</button>
+			<button @onclick="() => AppendToDisplay(3)">3</button>
+			<button class="operators" @onclick="() => AppendOperators('+')">+</button>
+		</div>
+		<div class="text-white mt-2">
+			<button @onclick="ClearDisplay">C</button>
+			<button @onclick="() => AppendToDisplay(0)">0</button>
+			<button @onclick="() => AppendOperators('.')">.</button>
+			<button class="operators" @onclick="Solve">=</button>
+		</div>
+	</div>
+</section>
+
+
+
+
+
+@code {
+
+	public string? value { get; set; }
+
+	public Task AppendToDisplay(int num)
+	{
+		value += num.ToString();
+		return Task.CompletedTask;
+
+	}
+	public Task AppendOperators(char val)
+	{
+		value += val.ToString();
+		return Task.CompletedTask;
+	}
+
+	public void ClearDisplay()
+	{
+		value = string.Empty;
+	}
+
+	public void Square()
+	{
+		if (double.TryParse(value, out double number))
+		{
+			value = Math.Pow(number, 2).ToString();
+		}
+		else
+		{
+			value = " Syntax Error";
+		}
+	}
+	public void SquareRoot()
+	{
+		if (double.TryParse(value, out double number))
+		{
+			value = Math.Sqrt(number).ToString();
+		}
+		else
+		{
+			value = "Syntax Error";
+		}
+	}
+
+	public void Solve()
+	{
+		try
+		{
+			var result = EvaluateExpression(value);
+			value = result.ToString();
+		}
+		catch
+		{
+			value = "Error";
+		}
+	}
+
+	public double EvaluateExpression(string expression)
+	{
+		expression = expression.Replace("%", "*0.01"); // Replace '%' with '*0.01' to handle percentage
+		var e = new Expression(expression);
+		return Convert.ToDouble(e.Evaluate());
+	}
+
+	public async Task HandleKeyPress(KeyboardEventArgs e)
+	{
+		switch (e.Key)
+		{
+			case "0": await AppendToDisplay(0); break;
+			case "1": await AppendToDisplay(1); break;
+			case "2": await AppendToDisplay(2); break;
+			case "3": await AppendToDisplay(3); break;
+			case "4": await AppendToDisplay(4); break;
+			case "5": await AppendToDisplay(5); break;
+			case "6": await AppendToDisplay(6); break;
+			case "7": await AppendToDisplay(7); break;
+			case "8": await AppendToDisplay(8); break;
+			case "9": await AppendToDisplay(9); break;
+			case "+": AppendOperators('+'); break;
+			case "-": AppendOperators('-'); break;
+			case "*": AppendOperators('*'); break;
+			case "/": AppendOperators('/'); break;
+			case "Enter": Solve(); break;
+			case "=": Solve(); break;
+			case "Escape": ClearDisplay(); break;
+			case "Backspace":
+				if (!string.IsNullOrEmpty(value))
+				{
+					value = value.Substring(0, value.Length - 1); // Delete last character
+				}
+				break;
+			case ".":
+				AppendOperators('.');
+				break;
+		}
+	}
+
+}
